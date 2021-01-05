@@ -50,9 +50,9 @@ class RomExtractor(object):
 			if self.extractmanual(app): manual_extracted = True
 			if rom_extracted and manual_extracted: return
 		
-		if rom_extracted: print 'Unable to extract manual.'
-		elif manual_extracted: print 'Unable to extract ROM.'
-		else: print 'Unable to extract ROM and manual.'
+		if rom_extracted: print ('Unable to extract manual.')
+		elif manual_extracted: print ('Unable to extract ROM.')
+		else: print ('Unable to extract ROM and manual.')
 	
 	# Actually extract the ROM
 	# Currently works for almost all NES, SNES, N64, TG16, Master System, and Genesis ROMs.
@@ -96,28 +96,28 @@ class RomExtractor(object):
 				rom = list(rom.getvalue())
 				rom[6] = chr(ord(rom[6]) | 2)
 				rom = StringIO(''.join(rom))
-				print 'Set the save flag to true'
+				print ('Set the save flag to true')
 			
-		print 'Got ROM: %s' % filename
+		print ('Got ROM: %s' % filename)
 		writerom(rom, filename)
 		return True
 	
 	def extractrom_n64(self, arc, filename):
 		if arc.hasfile('rom'):
 			rom = arc.getfile('rom')
-			print 'Got ROM: %s' % filename
+			print ('Got ROM: %s' % filename)
 			writerom(rom, filename)
 		elif arc.hasfile('romc'):
 			rom = arc.getfile('romc')
-			print 'Decompressing ROM: %s (this could take a minute or two)' % filename
+			print ('Decompressing ROM: %s (this could take a minute or two)' % filename)
 			try:
 				romdata = romc.decompress(rom)
 				outfile = open(filename, 'wb')
 				outfile.write(romdata)
 				outfile.close()
-				print 'Got ROM: %s' % filename
+				print ('Got ROM: %s' % filename)
 			except IndexError: # unknown compression - something besides LZSS and romchu?
-				print 'Decompression failed: unknown compression type'
+				print ('Decompression failed: unknown compression type')
 				outfile.close()
 				os.remove(filename)
 				return False
@@ -125,8 +125,8 @@ class RomExtractor(object):
 		
 		# extract save file
 		savepath = self.extractsave()
-		if savepath: print 'Extracted save file(s)'
-		else: print 'Failed to extract save file(s)'
+		if savepath: print ('Extracted save file(s)')
+		else: print ('Failed to extract save file(s)')
 		
 		return True
 	
@@ -138,27 +138,26 @@ class RomExtractor(object):
 				for line in ccf.getfile('config'):
 					if line.startswith('romfile='): romname = line[len('romfile='):].strip('/\\\"\0\r\n')
 			else:
-				print 'config not found'
+				print ('config not found')
 				return False
 			
 			if romname:
-				print 'Found ROM: %s' % romname
+				print ('Found ROM: %s' % romname)
 				rom = ccf.find(romname)
 				writerom(rom, filename)
-				print 'Got ROM: %s' % filename
+				print ('Got ROM: %s' % filename)
 				
-				if self.extractsave(): print 'Extracted save to %s.srm' % self.name
-				else: print 'No save file found'
+				if self.extractsave(): print ('Extracted save to %s.srm' % self.name)
+				else: print ('No save file found')
 				
 				return True
 			else:
-				print 'ROM filename not specified in config'
+				print ('ROM filename not specified in config')
 				return False
 	
 	def extractrom_tg16(self, arc, filename):
 		config = arc.getfile('config.ini')
 		if not config:
-			print 'config.ini not found'
 			return False
 		
 		path = None
@@ -167,15 +166,15 @@ class RomExtractor(object):
 				path = line[len('ROM='):].strip('/\\\"\0\r\n')
 		
 		if not path:
-			print 'ROM filename not specified in config.ini'
+			print ('ROM filename not specified in config.ini')
 			return False
 		
-		print 'Found ROM: %s' % path
+		print ('Found ROM: %s' % path)
 		rom = arc.getfile(path)
 	
 		if rom:
 			writerom(rom, filename)
-			print 'Got ROM: %s' % filename
+			print ('Got ROM: %s' % filename)
 			return True
 		else: return False
 	
@@ -186,10 +185,10 @@ class RomExtractor(object):
 		for f in arc.files:
 			path = f.path.split('.')
 			if len(path) == 2 and path[0].startswith('SN') and path[1].isdigit():
-				print 'Found original ROM: %s' % f.path
+				print ('Found original ROM: %s' % f.path)
 				rom = arc.getfile(f.path)
 				writerom(rom, filename)
-				print 'Got ROM: %s' % filename
+				print ('Got ROM: %s' % filename)
 				
 				extracted = True
 	
@@ -198,9 +197,9 @@ class RomExtractor(object):
 			for f in arc.files:
 				path = f.path.split('.')
 				if len(path) == 2 and path[1] == 'rom':
-					print "Recreating original ROM from %s" % f.path
+					print ("Recreating original ROM from %s" % f.path)
 					vcrom = arc.getfile(f.path)
-					if not vcrom: print "Error in reading ROM file %s" % f.path; return False
+					if not vcrom: print ("Error in reading ROM file %s" % f.path); return False
 			
 					# find raw PCM data
 					pcm = None
@@ -208,7 +207,7 @@ class RomExtractor(object):
 						path2 = f2.path.split('.')
 						if len(path2) == 2 and path2[1] == 'pcm':
 							pcm = arc.getfile(f2.path)
-					if not pcm: print 'Error: PCM audio data not found'; return False
+					if not pcm: print ('Error: PCM audio data not found'); return False
 			
 					'''# encode raw PCM in SNES BRR format
 					print 'Encoding audio as BRR'
@@ -218,7 +217,7 @@ class RomExtractor(object):
 					pcm.close()'''
 			
 					# inject BRR audio into the ROM
-					print 'Encoding and restoring BRR audio data to ROM'
+					print ('Encoding and restoring BRR audio data to ROM')
 					romdata = restore_brr_samples(vcrom, pcm)
 					vcrom.close()
 					pcm.close()
@@ -227,15 +226,15 @@ class RomExtractor(object):
 					f = open(filename, 'wb')
 					f.write(romdata)
 					f.close()
-					print 'Got ROM: %s' % filename
+					print ('Got ROM: %s' % filename)
 					extracted = True
 		
 		# extract save data (but don't overwrite existing save data)
 		if extracted:
 			srm = filename[0:filename.rfind('.smc')] + '.srm'
-			if os.path.lexists(srm): print 'Not overwriting existing save data'
-			elif self.extractsave(): print 'Extracted save data to %s' % srm
-			else: print 'Could not extract save data'
+			if os.path.lexists(srm): print ('Not overwriting existing save data')
+			elif self.extractsave(): print ('Extracted save data to %s' % srm)
+			else: print ('Could not extract save data')
 		
 		return extracted
 	
@@ -296,13 +295,13 @@ class RomExtractor(object):
 				man = U8Archive(ccf.getfile('man.arc'))
 			elif arc.findfile('htmlc.arc'):
 				manc = arc.getfile(arc.findfile('htmlc.arc'))
-				print 'Decompressing manual: htmlc.arc'
+				print ('Decompressing manual: htmlc.arc')
 				man = U8Archive(StringIO(romc.decompress(manc)))
 		except AssertionError: pass
 	
 		if man:
 			man.extract(os.path.join('manuals', self.name))
-			print 'Extracted manual to ' + os.path.join('manuals', self.name)
+			print ('Extracted manual to ' + os.path.join('manuals', self.name))
 			return True
 	
 		return False
@@ -325,10 +324,10 @@ class NandDump(object):
 				name = self.gettitle(os.path.join(content, appname))
 				channeltype = self.channeltype(ticket)
 				if name and channeltype:
-					print '%s: %s (ID: %s)' % (channeltype, name, id)
+					print ('%s: %s (ID: %s)' % (channeltype, name, id))
 					ext = RomExtractor(id, name, channeltype, self)
 					ext.extract()
-					print
+                    #print
 	
 	# Returns a string denoting the channel type.  Returns None if it's not a VC game.
 	def channeltype(self, ticket):
@@ -394,5 +393,5 @@ if __name__ == '__main__':
 	import sys
 	nand = NandDump(sys.argv[1])
 	nand.scantickets()
-	if len(sys.argv) >= 3: print nand.gettitle(sys.argv[2])
+	if len(sys.argv) >= 3: print (nand.gettitle(sys.argv[2]))
 
